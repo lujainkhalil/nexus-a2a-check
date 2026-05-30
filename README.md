@@ -1,6 +1,6 @@
 # nexus-a2a-check
 
-[![npm version](https://img.shields.io/npm/v/nexus-check?color=00d4a8&label=npm)](https://www.npmjs.com/package/nexus-check)
+[![npm version](https://img.shields.io/npm/v/nexus-check?color=00d4a8&label=npm)](https://www.npmjs.com/package/nexus-a2a-check)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00d4a8.svg)](LICENSE)
 [![A2A Spec](https://img.shields.io/badge/A2A-v1.0-0F6E56)](https://a2a-protocol.org/latest/specification/)
 
