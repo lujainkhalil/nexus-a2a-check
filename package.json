@@ -1,0 +1,38 @@
+{
+  "name": "nexus-a2a-check",
+  "version": "1.0.0",
+  "description": "A2A Agent Card validator — instant compliance reports for Agent2Agent protocol implementations",
+  "main": "dist/index.js",
+  "bin": {
+    "nexus-a2a-check": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["a2a", "agent2agent", "agent-card", "validator", "compliance", "ai-agents"],
+  "author": "Nexus",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexus-ai/nexus-check"
+  },
+  "files": ["dist/", "README.md"],
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

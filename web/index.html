@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nexus-check — A2A Agent Card Validator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg:        #0a0c0f;
+      --surface:   #111418;
+      --border:    #1e2530;
+      --border-hi: #2a3545;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --pass:      #22c55e;
+      --fail:      #ef4444;
+      --warn:      #f59e0b;
+      --skip:      #64748b;
+      --accent:    #00d4a8;
+      --accent-hi: #00ffcc;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'DM Sans', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 56px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--bg);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .logo-version {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 540px;
+    }
+
+    /* Input form */
+    .input-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .input-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .url-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .url-input::placeholder { color: var(--muted); }
+
+    .url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 212, 168, 0.12);
+    }
+
+    .run-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bg);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+
+    .run-btn:hover { background: var(--accent-hi); }
+    .run-btn:active { transform: scale(0.98); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .options-row {
+      margin-top: 12px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type=checkbox] {
+      accent-color: var(--accent);
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .loading.visible { display: flex; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-hi);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results panel */
+    .results {
+      display: none;
+    }
+
+    .results.visible { display: block; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: gap;
+      gap: 12px;
+    }
+
+    .result-url {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .result-url span {
+      color: var(--accent);
+    }
+
+    .score-badge {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 100px;
+      border: 1px solid;
+    }
+
+    .score-pass  { color: var(--pass); border-color: var(--pass);  background: rgba(34, 197, 94, 0.08); }
+    .score-warn  { color: var(--warn); border-color: var(--warn);  background: rgba(245, 158, 11, 0.08); }
+    .score-fail  { color: var(--fail); border-color: var(--fail);  background: rgba(239, 68, 68, 0.08); }
+
+    /* Check cards */
+    .checks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .check-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .check-card[data-status=pass]  { border-left: 3px solid var(--pass); }
+    .check-card[data-status=fail]  { border-left: 3px solid var(--fail); }
+    .check-card[data-status=warn]  { border-left: 3px solid var(--warn); }
+    .check-card[data-status=skip]  { border-left: 3px solid var(--skip); }
+
+    .check-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-header:hover { background: rgba(255,255,255,0.02); }
+
+    .check-pill {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .pill-pass { background: rgba(34, 197, 94, 0.15);  color: var(--pass); }
+    .pill-fail { background: rgba(239, 68, 68, 0.15);  color: var(--fail); }
+    .pill-warn { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
+    .pill-skip { background: rgba(100, 116, 139, 0.15); color: var(--skip); }
+
+    .check-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .check-duration {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .check-toggle {
+      color: var(--muted);
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .check-card.open .check-toggle {
+      transform: rotate(180deg);
+    }
+
+    .check-details {
+      display: none;
+      padding: 0 16px 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .check-card.open .check-details { display: block; }
+
+    .detail-item {
+      display: flex;
+      gap: 10px;
+      padding: 6px 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .detail-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .detail-msg { color: var(--text); flex: 1; word-break: break-all; }
+
+    .detail-ref {
+      display: block;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 11px;
+      margin-top: 2px;
+      opacity: 0.8;
+    }
+
+    .detail-ref:hover { opacity: 1; text-decoration: underline; }
+
+    /* Error state */
+    .error-box {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--fail);
+      display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* Footer notes */
+    .footer-notes {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-notes p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer-notes a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .footer-notes a:hover { text-decoration: underline; }
+
+    .cli-hint {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .cli-hint code {
+      color: var(--accent);
+    }
+
+    @media (max-width: 500px) {
+      .input-row { flex-direction: column; }
+      .run-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark">nx</div>
+      <span class="logo-text">nexus-check</span>
+      <span class="logo-version">v1.0</span>
+    </div>
+    <h1>A2A Agent Card <span>Validator</span></h1>
+    <p class="subtitle">
+      Instantly validate your agent's compliance with the
+      <a href="https://a2a-protocol.org/latest/specification/" target="_blank" style="color:var(--accent)">A2A protocol specification</a>.
+      No install needed.
+    </p>
+  </header>
+
+  <div class="input-section">
+    <label class="input-label" for="agentUrl">Agent Base URL</label>
+    <div class="input-row">
+      <input
+        type="url"
+        id="agentUrl"
+        class="url-input"
+        placeholder="https://myagent.example.com"
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <button class="run-btn" id="runBtn" onclick="runValidation()">
+        Run Checks →
+      </button>
+    </div>
+    <div class="options-row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="skipLifecycle">
+        Skip task lifecycle check
+      </label>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span id="loadingText">Fetching /.well-known/agent.json…</span>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="result-url">Checked: <span id="resultUrl"></span></div>
+      <div class="score-badge" id="scoreBadge"></div>
+    </div>
+    <div class="checks-list" id="checksList"></div>
+  </div>
+
+  <div class="footer-notes">
+    <p>
+      Part of <a href="https://nexus.ai" target="_blank">Nexus</a> —
+      trust infrastructure for the open agent web. ·
+      <a href="https://github.com/nexus-ai/nexus-check" target="_blank">GitHub</a> ·
+      <a href="https://a2a-protocol.org/latest/specification/" target="_blank">A2A Spec</a>
+    </p>
+    <div class="cli-hint">
+      <code>npx nexus-check &lt;url&gt;</code>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Inline A2A validation logic (mirrors the TypeScript checks)
+
+const SPEC_BASE = 'https://a2a-protocol.org/latest/specification';
+
+async function runValidation() {
+  const urlInput = document.getElementById('agentUrl').value.trim();
+  const skipLifecycle = document.getElementById('skipLifecycle').checked;
+  const btn = document.getElementById('runBtn');
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const errorBox = document.getElementById('errorBox');
+
+  errorBox.classList.remove('visible');
+  results.classList.remove('visible');
+
+  if (!urlInput) {
+    showError('Please enter an agent URL.');
+    return;
+  }
+
+  let baseUrl;
+  try {
+    const u = new URL(urlInput.startsWith('http') ? urlInput : 'https://' + urlInput);
+    baseUrl = u.protocol + '//' + u.host;
+  } catch {
+    showError('Invalid URL. Please enter a valid agent base URL, e.g. https://myagent.example.com');
+    return;
+  }
+
+  btn.disabled = true;
+  loading.classList.add('visible');
+  setLoadingText('Fetching /.well-known/agent.json…');
+
+  const checks = [];
+  let agentCard = null;
+
+  // Check 1: Discovery
+  const discovery = await checkDiscovery(baseUrl);
+  checks.push(discovery);
+
+  if (discovery.status === 'pass' && discovery._card) {
+    agentCard = discovery._card;
+
+    // Check 2: Schema
+    setLoadingText('Validating Agent Card schema…');
+    checks.push(checkSchema(agentCard));
+
+    // Check 3: Signature
+    setLoadingText('Checking signature…');
+    checks.push(checkSignature(agentCard));
+
+    // Check 4: Reachability
+    setLoadingText('Testing endpoint reachability…');
+    checks.push(await checkReachability(agentCard));
+
+    // Check 5: Lifecycle
+    if (!skipLifecycle) {
+      setLoadingText('Submitting test task (lifecycle check)…');
+      checks.push(await checkLifecycle(agentCard));
+    } else {
+      checks.push({ name: 'Task Lifecycle', status: 'skip', details: [{ message: 'Skipped via option' }] });
+    }
+  } else {
+    // Fill remaining checks as skipped
+    const skippedNames = ['Schema Validation', 'Signature Verification', 'Endpoint Reachability', 'Task Lifecycle'];
+    for (const name of skippedNames) {
+      checks.push({ name, status: 'skip', details: [{ message: 'Skipped — Agent Card not found' }] });
+    }
+  }
+
+  loading.classList.remove('visible');
+  btn.disabled = false;
+
+  renderResults(baseUrl, checks);
+}
+
+function setLoadingText(t) {
+  document.getElementById('loadingText').textContent = t;
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('visible');
+}
+
+// ── Checks ──────────────────────────────────────────────────────────────────
+
+async function checkDiscovery(baseUrl) {
+  const cardUrl = baseUrl + '/.well-known/agent.json';
+  const specRef = SPEC_BASE + '/#82-discovery-mechanisms';
+
+  try {
+    const resp = await fetch(cardUrl, {
+      headers: { Accept: 'application/json, application/a2a+json', 'User-Agent': 'nexus-check-web/1.0' },
+    });
+
+    if (resp.status === 404) {
+      return { name: 'Agent Card Discovery', status: 'fail', details: [
+        { message: 'No Agent Card found at ' + cardUrl + ' (HTTP 404). Agent Cards must be served at /.well-known/agent.json', specRef }
+      ]};
+    }
+
+    if (!resp.ok) {
+      return { name: 'Agent Card Discovery', status: 'fail', details: [
+        { message: 'HTTP ' + resp.status + ' when fetching ' + cardUrl, specRef }
+      ]};
+    }
+
+    let card;
+    try { card = await resp.json(); }
+    catch { return { name: 'Agent Card Discovery', status: 'fail', details: [{ message: 'Response is not valid JSON', specRef }] }; }
+
+    const details = [{ message: 'Agent Card found at ' + cardUrl }];
+    if (card.name) details.push({ message: 'Agent name: ' + card.name });
+    if (card.protocolVersion) details.push({ message: 'Protocol version: ' + card.protocolVersion });
+
+    const etag = resp.headers.get('etag');
+    if (etag) details.push({ message: 'ETag caching header present', specRef: SPEC_BASE + '/#86-caching' });
+
+    return { name: 'Agent Card Discovery', status: 'pass', details, _card: card };
+  } catch (err) {
+    const isCors = err.message?.includes('fetch') || err.message?.includes('Failed');
+    return { name: 'Agent Card Discovery', status: 'fail', details: [
+      { message: isCors
+          ? 'Could not fetch Agent Card — the server may not have CORS enabled. Try the CLI tool: npx nexus-check ' + baseUrl
+          : 'Network error: ' + err.message,
+        specRef }
+    ]};
+  }
+}
+
+function checkSchema(card) {
+  const details = [];
+  let passed = true;
+  const specRef = SPEC_BASE + '/#441-agentcard';
+
+  const required = ['name', 'description', 'url', 'version'];
+  for (const field of required) {
+    if (!(field in card)) {
+      details.push({ message: 'Missing required field: ' + field, specRef });
+      passed = false;
+    } else if (typeof card[field] !== 'string' || card[field].trim() === '') {
+      details.push({ message: 'Field "' + field + '" must be a non-empty string, got: ' + JSON.stringify(card[field]), specRef });
+      passed = false;
+    }
+  }
+
+  if (card.url) {
+    try { new URL(card.url); } catch {
+      details.push({ message: 'Field "url" is not a valid URL: ' + card.url, specRef });
+      passed = false;
+    }
+  }
+
+  if (!('capabilities' in card)) {
+    details.push({ message: 'Missing required field: capabilities', specRef: SPEC_BASE + '/#443-agentcapabilities' });
+    passed = false;
+  } else if (typeof card.capabilities !== 'object' || card.capabilities === null) {
+    details.push({ message: 'Field "capabilities" must be an object', specRef: SPEC_BASE + '/#443-agentcapabilities' });
+    passed = false;
+  }
+
+  if (passed) {
+    details.push({ message: 'All required fields present and correctly typed' });
+    const caps = card.capabilities || {};
+    const enabled = Object.entries(caps).filter(([,v]) => v === true).map(([k]) => k);
+    if (enabled.length) details.push({ message: 'Capabilities enabled: ' + enabled.join(', ') });
+    if (card.skills?.length) details.push({ message: 'Declared ' + card.skills.length + ' skill(s)' });
+  }
+
+  return { name: 'Schema Validation', status: passed ? 'pass' : 'fail', details };
+}
+
+function checkSignature(card) {
+  const specRef = SPEC_BASE + '/#84-agent-card-signing';
+  if (!card.signature) {
+    return { name: 'Signature Verification', status: 'skip', details: [
+      { message: 'No signature field — signed Agent Cards are optional in A2A v1.0', specRef }
+    ]};
+  }
+
+  const sig = card.signature;
+  if (!sig.algorithm || typeof sig.algorithm !== 'string') {
+    return { name: 'Signature Verification', status: 'fail', details: [{ message: 'signature.algorithm must be a string', specRef }] };
+  }
+  if (!sig.signature || typeof sig.signature !== 'string') {
+    return { name: 'Signature Verification', status: 'fail', details: [{ message: 'signature.signature value is missing', specRef }] };
+  }
+
+  const b64urlRe = /^[A-Za-z0-9_\-]+=*$/;
+  if (!b64urlRe.test(sig.signature)) {
+    return { name: 'Signature Verification', status: 'fail', details: [{ message: 'signature.signature is not valid Base64url', specRef }] };
+  }
+
+  return { name: 'Signature Verification', status: 'pass', details: [
+    { message: 'Signature present — algorithm: ' + sig.algorithm },
+    { message: 'Key ID: ' + (sig.keyId || '(not specified)') },
+    { message: 'Structural validation passed. Full cryptographic verification requires the agent\'s public key.', specRef },
+  ]};
+}
+
+async function checkReachability(card) {
+  const specRef = SPEC_BASE + '/#8-agent-discovery-the-agent-card';
+  const details = [];
+
+  try {
+    const resp = await fetch(card.url, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'nexus-check-web/1.0', 'A2A-Version': '1.0' },
+    });
+
+    details.push({ message: 'Agent endpoint responded: HTTP ' + resp.status });
+
+    if (resp.status === 401 || resp.status === 403) {
+      details.push({ message: 'Authentication required (HTTP ' + resp.status + ') — server is live', specRef: SPEC_BASE + '/#7-authentication-and-authorization' });
+      return { name: 'Endpoint Reachability', status: 'warn', details };
+    }
+
+    const a2av = resp.headers.get('a2a-version');
+    if (a2av) details.push({ message: 'A2A-Version header: ' + a2av });
+
+    return { name: 'Endpoint Reachability', status: resp.status < 500 ? 'pass' : 'fail', details };
+  } catch (err) {
+    const isCors = err.message?.includes('fetch') || err.message?.includes('Failed');
+    return { name: 'Endpoint Reachability', status: isCors ? 'warn' : 'fail', details: [
+      { message: isCors
+          ? 'CORS blocked HEAD request — the agent server may still be live. Verify manually or use the CLI.'
+          : 'Cannot reach endpoint: ' + err.message, specRef }
+    ]};
+  }
+}
+
+async function checkLifecycle(card) {
+  const specRef = SPEC_BASE + '/#941-sendmessage';
+
+  if (card.authentication && Object.keys(card.authentication).length > 0) {
+    return { name: 'Task Lifecycle', status: 'skip', details: [
+      { message: 'Authentication required — lifecycle test skipped. Use the CLI with credentials to test this endpoint.', specRef: SPEC_BASE + '/#7-authentication-and-authorization' }
+    ]};
+  }
+
+  const requestId = crypto.randomUUID();
+  const body = JSON.stringify({
+    jsonrpc: '2.0', id: requestId, method: 'a2a.sendMessage',
+    params: {
+      message: { role: 'user', parts: [{ text: 'nexus-check: A2A compliance probe.' }], contextId: crypto.randomUUID(), messageId: crypto.randomUUID() },
+      configuration: { acceptedOutputModes: ['text/plain'], returnImmediately: false, historyLength: 0 },
+    },
+  });
+
+  try {
+    const resp = await fetch(card.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'A2A-Version': '1.0', 'User-Agent': 'nexus-check-web/1.0' },
+      body,
+    });
+
+    if (resp.status === 401 || resp.status === 403) {
+      return { name: 'Task Lifecycle', status: 'skip', details: [
+        { message: 'HTTP ' + resp.status + ' — authentication required. Lifecycle test skipped.', specRef }
+      ]};
+    }
+
+    let json;
+    try { json = await resp.json(); } catch {
+      return { name: 'Task Lifecycle', status: 'fail', details: [{ message: 'Response is not valid JSON', specRef }] };
+    }
+
+    if (json.jsonrpc !== '2.0') {
+      return { name: 'Task Lifecycle', status: 'fail', details: [{ message: 'Response missing "jsonrpc": "2.0" field', specRef }] };
+    }
+
+    if (json.error) {
+      const ok = [-32602, -32600].includes(json.error.code);
+      return { name: 'Task Lifecycle', status: ok ? 'pass' : 'fail', details: [
+        { message: 'JSON-RPC error ' + json.error.code + ': ' + json.error.message + (ok ? ' (expected for probe request)' : ''), specRef }
+      ]};
+    }
+
+    const task = json.result;
+    if (!task?.id || typeof task.id !== 'string') {
+      return { name: 'Task Lifecycle', status: 'fail', details: [{ message: 'Response result is not a valid Task — missing id field', specRef: SPEC_BASE + '/#411-task' }] };
+    }
+
+    const state = task.status?.state;
+    const validStates = ['submitted','working','input-required','auth-required','completed','failed','cancelled','rejected'];
+    if (!validStates.includes(state)) {
+      return { name: 'Task Lifecycle', status: 'fail', details: [
+        { message: 'Task state "' + state + '" is not a valid A2A TaskState', specRef: SPEC_BASE + '/#413-taskstate' }
+      ]};
+    }
+
+    return { name: 'Task Lifecycle', status: 'pass', details: [
+      { message: 'Task created: ' + task.id },
+      { message: 'Task state: ' + state + ' (valid A2A lifecycle state)', specRef: SPEC_BASE + '/#413-taskstate' },
+    ]};
+
+  } catch (err) {
+    const isCors = err.message?.includes('fetch') || err.message?.includes('Failed');
+    return { name: 'Task Lifecycle', status: isCors ? 'warn' : 'fail', details: [
+      { message: isCors
+          ? 'CORS policy blocked request — use npx nexus-check for full lifecycle testing from a non-browser context'
+          : 'Error: ' + err.message, specRef }
+    ]};
+  }
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+
+function renderResults(url, checks) {
+  document.getElementById('resultUrl').textContent = url;
+
+  const score = checks.reduce((s, c) => {
+    if (c.status === 'pass') return s + 1;
+    if (c.status === 'warn' || c.status === 'skip') return s + 0.5;
+    return s;
+  }, 0);
+
+  const badge = document.getElementById('scoreBadge');
+  const allPass = score >= 5;
+  const allFail = score === 0;
+  badge.textContent = Math.floor(score * 2) / 2 + '/5 ' + (allPass ? '— fully compliant ✓' : allFail ? '— not compliant' : '— partial');
+  badge.className = 'score-badge ' + (allPass ? 'score-pass' : allFail ? 'score-fail' : 'score-warn');
+
+  const list = document.getElementById('checksList');
+  list.innerHTML = '';
+
+  checks.forEach((check, i) => {
+    const card = document.createElement('div');
+    card.className = 'check-card';
+    card.dataset.status = check.status;
+
+    const pillClass = { pass: 'pill-pass', fail: 'pill-fail', warn: 'pill-warn', skip: 'pill-skip' }[check.status];
+    const pillLabel = check.status.toUpperCase();
+    const icon = { pass: '✓', fail: '✗', warn: '⚠', skip: '○' }[check.status];
+
+    const detailHtml = check.details.map(d => `
+      <div class="detail-item">
+        <span class="detail-icon" style="color:${statusColor(check.status)}">${icon}</span>
+        <div>
+          <div class="detail-msg">${escHtml(d.message)}</div>
+          ${d.specRef ? '<a class="detail-ref" href="' + escHtml(d.specRef) + '" target="_blank" rel="noopener">' + escHtml(d.specRef) + '</a>' : ''}
+        </div>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="check-header" onclick="toggleCheck(this)">
+        <span class="check-pill ${pillClass}">${pillLabel}</span>
+        <span class="check-name">${i + 1}. ${escHtml(check.name)}</span>
+        <span class="check-toggle">▼</span>
+      </div>
+      <div class="check-details">${detailHtml}</div>
+    `;
+
+    // Auto-expand failures
+    if (check.status === 'fail') card.classList.add('open');
+
+    list.appendChild(card);
+  });
+
+  document.getElementById('results').classList.add('visible');
+}
+
+function toggleCheck(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+function statusColor(status) {
+  return { pass: '#22c55e', fail: '#ef4444', warn: '#f59e0b', skip: '#64748b' }[status] || '#fff';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Allow Enter key in input
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('agentUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runValidation();
+  });
+});
+</script>
+</body>
+</html>
