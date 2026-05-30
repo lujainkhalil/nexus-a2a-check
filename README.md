@@ -124,10 +124,10 @@ Every error message tells you exactly what's wrong and links to the relevant spe
 Add this badge to your agent's README once it passes:
 
 ```markdown
-[![A2A Compliant](https://img.shields.io/badge/A2A-compliant-0F6E56)](https://github.com/nexus-ai/nexus-check)
+[![A2A Compliant](https://img.shields.io/badge/A2A-compliant-0F6E56)](https://github.com/lujainkhalil/nexus-a2a-check)
 ```
 
-[![A2A Compliant](https://img.shields.io/badge/A2A-compliant-0F6E56)](https://github.com/nexus-ai/nexus-check)
+[![A2A Compliant](https://img.shields.io/badge/A2A-compliant-0F6E56)](https://github.com/lujainkhalil/nexus-a2a-check)
 
 ---
 
