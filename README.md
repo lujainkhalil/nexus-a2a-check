@@ -1,24 +1,24 @@
 # nexus-a2a-check
 
-[![npm version](https://img.shields.io/npm/v/nexus-check?color=00d4a8&label=npm)](https://www.npmjs.com/package/nexus-a2a-check)
+[![npm version](https://img.shields.io/npm/v/nexus-a2a-check?color=00d4a8&label=npm)](https://www.npmjs.com/package/nexus-a2a-check)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00d4a8.svg)](LICENSE)
 [![A2A Spec](https://img.shields.io/badge/A2A-v1.0-0F6E56)](https://a2a-protocol.org/latest/specification/)
 
 **The `npx` tool for validating A2A Agent Cards.** Run it against any agent URL and get an instant compliance report.
 
 ```
-npx nexus-check https://myagent.example.com
+npx nexus-a2a-check https://myagent.example.com
 ```
 
 ---
 
 ## Why this exists
 
-The [A2A protocol](https://a2a-protocol.org) (Agent2Agent, Linux Foundation) defines how AI agents discover and communicate with each other. Every A2A agent publishes an **Agent Card** at `/.well-known/agent.json`, a structured manifest declaring its capabilities, skills, and endpoint.
+The [A2A protocol](https://a2a-protocol.org) (Agent2Agent, Linux Foundation) defines how AI agents discover and communicate with each other. Every A2A agent publishes an **Agent Card** at `/.well-known/agent.json` — a structured manifest declaring its capabilities, skills, and endpoint.
 
 Getting the Agent Card right is critical: it's the first thing any A2A client reads before attempting to communicate with your agent. But until now there was no clean tool to validate it.
 
-**nexus-check** fills that gap. Zero install, instant output, spec-linked error messages.
+**nexus-a2a-check** fills that gap. Zero install, instant output, spec-linked error messages.
 
 ---
 
@@ -27,20 +27,20 @@ Getting the Agent Card right is critical: it's the first thing any A2A client re
 No install needed — run directly with `npx`:
 
 ```bash
-npx nexus-check https://myagent.example.com
+npx nexus-a2a-check https://myagent.example.com
 ```
 
 Or install globally:
 
 ```bash
-npm install -g nexus-check
-nexus-check https://myagent.example.com
+npm install -g nexus-a2a-check
+nexus-a2a-check https://myagent.example.com
 ```
 
 ### Options
 
 ```
-nexus-check <url> [options]
+nexus-a2a-check <url> [options]
 
 Options:
   --json              Output full report as JSON (for CI/CD pipelines)
@@ -69,8 +69,8 @@ Scoring: **pass** = 1pt · **warn/skip** = 0.5pt · **fail** = 0pt · Max: **5/5
 ## Example output
 
 ```
-  nexus-check  A2A Agent Card Validator
-  https://github.com/nexus-ai/nexus-check
+  nexus-a2a-check  A2A Agent Card Validator
+  https://github.com/lujainkhalil/nexus-a2a-check
 
 Target:  https://myagent.example.com
 Scanned: 30 May 2026, 14:22:01
@@ -160,8 +160,8 @@ A companion browser-based validator is available at `web/index.html` (or your de
 ## Development
 
 ```bash
-git clone https://github.com/nexus-ai/nexus-check
-cd nexus-check
+git clone https://github.com/lujainkhalil/nexus-a2a-check
+cd nexus-a2a-check
 npm install
 npm run build
 npm test
@@ -173,7 +173,7 @@ node dist/index.js https://myagent.example.com
 ### Project structure
 
 ```
-nexus-check/
+nexus-a2a-check/
 ├── src/
 │   ├── index.ts          # CLI entry point
 │   ├── validator.ts      # Orchestrates all checks
