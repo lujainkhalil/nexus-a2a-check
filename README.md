@@ -1,4 +1,4 @@
-# nexus-check
+# nexus-a2a-check
 
 [![npm version](https://img.shields.io/npm/v/nexus-check?color=00d4a8&label=npm)](https://www.npmjs.com/package/nexus-check)
 [![License: MIT](https://img.shields.io/badge/License-MIT-00d4a8.svg)](LICENSE)
@@ -14,7 +14,7 @@ npx nexus-check https://myagent.example.com
 
 ## Why this exists
 
-The [A2A protocol](https://a2a-protocol.org) (Agent2Agent, Linux Foundation) defines how AI agents discover and communicate with each other. Every A2A agent publishes an **Agent Card** at `/.well-known/agent.json` — a structured manifest declaring its capabilities, skills, and endpoint.
+The [A2A protocol](https://a2a-protocol.org) (Agent2Agent, Linux Foundation) defines how AI agents discover and communicate with each other. Every A2A agent publishes an **Agent Card** at `/.well-known/agent.json`, a structured manifest declaring its capabilities, skills, and endpoint.
 
 Getting the Agent Card right is critical: it's the first thing any A2A client reads before attempting to communicate with your agent. But until now there was no clean tool to validate it.
 
@@ -203,9 +203,7 @@ Issues and PRs welcome. If you find a compliant agent that fails a check — or 
 
 ## About Nexus
 
-nexus-check is the open source entry point for **Nexus** — trust and economic infrastructure for the open agent web. The validator puts Nexus in front of every developer building A2A-compliant agents.
-
-[nexus.ai](https://nexus.ai)
+nexus-a2a-check is the open source entry point for **Nexus** — trust and economic infrastructure for the open agent web.
 
 ---
 
